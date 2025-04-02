@@ -10,7 +10,12 @@ class GameController extends Controller
     public function index()
     {
         $games = Game::all();
-        return response()->json($games);
+        return view('games.index', compact('games'));
+    }
+
+    public function create()
+    {
+        return view('games.create');
     }
 
     public function store(Request $request)
@@ -21,33 +26,26 @@ class GameController extends Controller
             'plataforma' => 'required|string|max:255',
         ]);
 
-        $games = Game::create([
-            'nome' => $validated['nome'],
-            'genero' => $validated['genero'],
-            'plataforma' => $validated['plataforma'],
-        ]);
+        $game = Game::create($validated);
 
-        return response()->json(['message' => 'O jogo foi criado com sucesso!', 'game' => $games], 201);
+        return redirect()->route('games.index')->with('success', 'Jogo criado com sucesso!');
     }
 
     public function show($id)
     {
-        $games = Game::find($id);
+        $game = Game::findOrFail($id);
+        return view('games.show', compact('game'));
+    }
 
-        if ($games) {
-            return response()->json($games);
-        } else {
-            return response()->json(['error' => 'O jogo não foi encontrado.'], 404);
-        }
+    public function edit($id)
+    {
+        $game = Game::findOrFail($id);
+        return view('games.edit', compact('game'));
     }
 
     public function update(Request $request, $id)
     {
-        $games = Game::find($id);
-
-        if (!$games) {
-            return response()->json(['error' => 'O jogo não foi encontrado.'], 404);
-        }
+        $game = Game::findOrFail($id);
 
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
@@ -55,25 +53,16 @@ class GameController extends Controller
             'plataforma' => 'required|string|max:255',
         ]);
 
-        $games->update
-        ([
-            'nome' => $validated['nome'],
-            'genero' => $validated['genero'],
-            'plataforma' => $validated['plataforma'],
-        ]);
-        return response()->json(['message' => 'O jogo foi atualizado com sucesso!', 'game' => $games]);
+        $game->update($validated);
+
+        return redirect()->route('games.index')->with('success', 'O jogo foi atualizado com sucesso!');
     }
 
     public function destroy($id)
     {
-        $games = Game::find($id);
+        $game = Game::findOrFail($id);
+        $game->delete();
 
-        if (!$games) {
-            return response()->json(['error' => 'O jogo não foi encontrado.'], 404);
-        }
-
-        $games->delete();
-
-        return response()->json(['message' => 'O jogo foi removido com sucesso.']);
+        return redirect()->route('games.index')->with('success', 'O jogo foi excluído com sucesso!');
     }
 }
